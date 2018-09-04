@@ -22,6 +22,10 @@ namespace nss
             SqliteConnection db = DatabaseInterface.Connection;
             DatabaseInterface.CheckCohortTable();
             DatabaseInterface.CheckInstructorsTable();
+            DatabaseInterface.ExerciseTable();
+            DatabaseInterface.StudentTable();
+            DatabaseInterface.StudentExerciseTable();
+            
 
             List<Instructor> instructors = db.Query<Instructor>(@"SELECT * FROM Instructor").ToList();
             instructors.ForEach(i => Console.WriteLine($"{i.FirstName} {i.LastName}"));
@@ -221,8 +225,13 @@ namespace nss
 
             /*
                 1. Create Exercises table and seed it
+
                 2. Create Student table and seed it  (use sub-selects)
+
+
                 3. Create StudentExercise table and seed it (use sub-selects)
+
+
                 4. List the instructors and students assigned to each cohort
                 5. List the students working on each exercise, include the
                    student's cohort and the instructor who assigned the exercise
