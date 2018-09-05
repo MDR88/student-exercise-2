@@ -236,7 +236,7 @@ namespace nss
             Dictionary<int, Cohort> allCohorts = new Dictionary<int, Cohort>();
 
             db.Query<Cohort, Instructor, Student, Cohort>(@"
-                SELECT
+               SELECT 
                        c.Id,
                        c.Name,
                        i.Id,
@@ -246,8 +246,8 @@ namespace nss
                        s.FirstName,
                        s.LastName
                 FROM Cohort c
-                LEFT JOIN Student s ON s.Id = se.StudentId
-                LEFT JOIN Exercise e ON se.ExerciseId = e.Id
+                JOIN Student s ON c.Id = s.CohortId
+                JOIN Instructor i ON c.Id = i.CohortId
             ", (cohort, instructor, student) =>
             {
                 if (!allCohorts.ContainsKey(cohort.Id))
