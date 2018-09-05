@@ -25,7 +25,7 @@ namespace nss
             DatabaseInterface.ExerciseTable();
             DatabaseInterface.StudentTable();
             DatabaseInterface.StudentExerciseTable();
-            
+
 
             List<Instructor> instructors = db.Query<Instructor>(@"SELECT * FROM Instructor").ToList();
             instructors.ForEach(i => Console.WriteLine($"{i.FirstName} {i.LastName}"));
@@ -45,6 +45,8 @@ namespace nss
 
             /*
                 Query the database for each instructor, and join in the instructor's cohort.
+
+
                 Since an instructor is only assigned to one cohort at a time, you can simply
                 assign the corresponding cohort as a property on the instance of the
                 Instructor class that is created by Dapper.
@@ -223,6 +225,62 @@ namespace nss
 
 
 
+
+
+
+
+
+            // 4. List the instructors and students assigned to each cohort
+
+
+            Dictionary<int, Cohort> allCohorts = new Dictionary<int, Cohort>();
+
+            db.Query<Cohort, Instructor, Student, Cohort>(@"
+                SELECT
+                       c.Id,
+                       c.Name,
+                       i.Id,
+                       i.FirstName,
+                       i.LastName,
+                       s.Id,
+                       s.FirstName,
+                       s.LastName
+                FROM Cohort c
+                LEFT JOIN Student s ON s.Id = se.StudentId
+                LEFT JOIN Exercise e ON se.ExerciseId = e.Id
+            ", (cohort, instructor, student) =>
+            {
+                if (!allCohorts.ContainsKey(cohort.Id))
+                {
+                    allCohorts[cohort.Id] = cohort;
+                }
+                allCohorts[cohort.Id].Students.Add(student);
+                allCohorts[cohort.Id].Instructors.Add(instructor);
+                return cohort;
+            });
+
+            /*
+                Display the student information using the StringBuilder class
+             */
+            foreach (KeyValuePair<int,Cohort> student in allCohorts)
+            {
+                List<string> assignedExercises = new List<string>();
+                student.Value.AssignedExercises.ForEach(e => assignedExercises.Add(e.Name));
+
+                StringBuilder output = new StringBuilder(100);
+                output.Append($"{student.Value.FirstName} {student.Value.LastName} ");
+                output.Append($"in {student.Value.Cohort.Name} ");
+                output.Append($"is working on {String.Join(',', assignedExercises)}.");
+                Console.WriteLine(output);
+
+                //Console.WriteLine($@"{student.Value.FirstName} {student.Value.LastName} is working on {String.Join(',', assignedExercises)}.");
+            }
+
+
+
+
+
+
             /*
                 1. Create Exercises table and seed it
 
@@ -232,7 +290,8 @@ namespace nss
                 3. Create StudentExercise table and seed it (use sub-selects)
 
 
-                4. List the instructors and students assigned to each cohort
+
+
                 5. List the students working on each exercise, include the
                    student's cohort and the instructor who assigned the exercise
              */
